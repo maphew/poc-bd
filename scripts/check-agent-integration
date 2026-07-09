@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if git rev-parse --show-toplevel >/dev/null 2>&1; then
+  cd "$(git rev-parse --show-toplevel)"
+fi
+
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "missing required command: $1" >&2
+    exit 1
+  fi
+}
+
+require_file() {
+  if [[ ! -f "$1" ]]; then
+    echo "missing required file: $1" >&2
+    exit 1
+  fi
+}
+
+require_cmd bd
+require_cmd npx
+require_cmd grep
+
+require_file AGENTS.md
+require_file CLAUDE.md
+require_file CONTEXT.md
+require_file docs/agents/issue-tracker.md
+require_file docs/agents/triage-labels.md
+require_file docs/agents/domain.md
+require_file docs/adr/0001-use-beads-as-matt-skills-issue-tracker.md
+
+bd --version >/dev/null
+bd prime >/dev/null
+bd ready --json >/dev/null
+
+skills_json="$(npx --yes skills@latest list -g --json)"
+for skill in setup-matt-pocock-skills to-tickets triage implement tdd code-review; do
+  if ! grep -q "\"name\": \"$skill\"" <<<"$skills_json"; then
+    echo "missing global Codex skill: $skill" >&2
+    exit 1
+  fi
+done
+
+grep -q "docs/agents/issue-tracker.md" AGENTS.md
+grep -q "docs/agents/issue-tracker.md" CLAUDE.md
+grep -q "bd dep add" docs/agents/issue-tracker.md
+grep -q "ready-for-agent" docs/agents/triage-labels.md
+
+echo "agent integration ok"
