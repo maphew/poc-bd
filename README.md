@@ -1,6 +1,6 @@
 # poc-bd
 
-A proof of concept for using Matt Pocock's agent skills with Beads as the first-class issue tracker.
+A proof of concept for using Matt Pocock's agent skills with Beads as the issue tracker.
 
 ## What Is Wired Up
 
